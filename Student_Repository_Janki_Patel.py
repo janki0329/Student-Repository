@@ -16,7 +16,7 @@ CWID : 10457365
 import os
 from prettytable import PrettyTable
 from collections import defaultdict
-from typing import Dict, Set, List, Iterator, Tuple, DefaultDict
+from typing import Iterator, Tuple, Dict, List, DefaultDict, IO
 class University:
     """It will store student and instructor recorde"""
 
@@ -61,7 +61,7 @@ class University:
             self._getmajor(os.path.join(dire, mejor))
             self._getstudent(os.path.join(dire, stud))
             self._getinstructor(os.path.join(dire, inst))
-            self._getgrades(os.path.join(dire, grade))
+            self._getgrade(os.path.join(dire, grade))
 
         except (FileNotFoundError, ValueError) as err:
             print(err)
@@ -85,14 +85,14 @@ class University:
             print(ve)
 
     def _getinstructor(self, path: str) -> None:
-        """In this method we will get student details from the file store in to dictionary"""
+        """In this method we will get instructor  details from the file store in to dictionary"""
         try:
             for cwid, name, dept in self.file_reader(path, 3, sep='|', header=True):
                 self._instructors[cwid] = Instructor(cwid, name, dept)
         except ValueError as ve:
             print(ve)
 
-    def _getgrades(self, path: str) -> None:
+    def _getgrade(self, path: str) -> None:
         """In this method we will get student grade from the file store in to dictionary """
         g_info: Iterator[Tuple[str]] = self.file_reader(
             path, 4, sep='|', header=True)
@@ -124,12 +124,12 @@ class University:
         """  Pretty table for students """
         pt_table: PrettyTable = PrettyTable(
             field_names=Student.prettytable_header)
-        for Student in self._students.values():
+        for s in self._students.values():
             pt_table.add_row(s.pt_table_row())
         return pt_table
 
     def i_table(self) -> PrettyTable:
-        """  Pretty table for students instructor table """
+        """  Pretty table for instructor table """
         pt_table: PrettyTable = PrettyTable(
             field_names=Instructor.prettytable_header)
         for Instructor in self._instructors.values():
@@ -139,7 +139,7 @@ class University:
         return pt_table
 
     def m_table(self) -> PrettyTable:
-        """ Pretty table for students major table """
+        """ Pretty table for major table """
         pt_table: PrettyTable = PrettyTable(
             field_names=Major.prettytable_header)
         for major in self._majors.values():
@@ -148,18 +148,18 @@ class University:
 
 
 class Student:
-    """ Student class """
+    """ This is Student class """
     prettytable_header: list = ['CWID', 'Name', 'major',
                                 'Completed Courses', 'rem_required', 'rem_electives', 'gpa']
 
-    def __init__(self, cwid: str, name: str, major: str) -> None:
+    def __init__(self, cwid: int, name: str, major: str) -> None:
         """ in that we will initialize student table details"""
-        self._cwid: str = cwid
+        self._cwid: int = cwid
         self._name: str = name
         self._major: str = major
         self._courses: Dict[str, str] = defaultdict()
 
-    def a_course(self, course: str, grade: str) -> None:
+    def a_course(self, course, grade) -> None:
         """in that we will add courses with grades of student"""
         self._courses[course] = grade
 
@@ -182,24 +182,25 @@ class Student:
 
 
 class Instructor:
-    """ This is Instructor class """
+    """This is Instructor class """
     prettytable_header = ['CWID', 'Name', 'Dept', 'Course', 'Students']
 
     def __init__(self, cwid: int, name: str, dept: str) -> None:
-        """ Initialize instructor table detail """
+        """ Initialize instructor table details """
         self._cwid: int = cwid
         self._name: str = name
         self._dept: str = dept
-        self._cour: Dict[str] = defaultdict(int)
+        self._courses_i: DefaultDict[str, int] = defaultdict(int)
 
-    def add_s(self, course: str) -> None:
-        """  This method we will counting number of students who took the course with this instructor """
-        self._cour[course] = self._cour[course]+1
+    def add_s(self, course) -> None:
+        """ This method we will counting number of students who took the course with this instructor """
+        self._courses_i[course] = self._courses_i[course] + 1
 
     def pt_table_row(self) -> None:
-        """in that we yield the rows for instructor prettytable """
-        for course, count in self._cour.items():
+        """ in that we yield the rows for instructor prettytable """
+        for course, count in self._courses_i.items():
             yield [self._cwid, self._name, self._dept, course, count]
+
 
 
 class Major:
